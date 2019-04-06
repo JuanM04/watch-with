@@ -1,0 +1,115 @@
+.container, .playerContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 750px;
+  height: 233px;
+}
+
+.playerContainer {
+  width: 500px;
+  height: 500px;
+}
+
+
+
+.mainTitle {
+  position: absolute;
+  top: 0;
+  font-size: 90px;
+  text-align: center;
+}
+
+.subtitle {
+  position: absolute;
+  top: 60px;
+  font-size: 20px;
+  text-align: center;
+}
+
+
+
+.baseInput {
+  width: 375px;
+  position: absolute;
+  bottom: 0;
+}
+
+.baseInputSide {
+  font-size: 15px;
+}
+
+
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.footerHeart {
+  transition: .25s;
+}
+
+.footerHeart:hover {
+  color: #ff0000;
+}
+
+.footerLink {
+  transition: .25s;
+  color: #868e96;
+  text-decoration: none !important;
+}
+
+.footerLink:hover {
+  color: #007bff;
+}
+
+
+.roomName {
+  position: absolute;
+  top: 50px;
+  font-weight: 300;
+}
+
+
+
+
+
+
+
+
+
+.buttonYoutube {
+  border-color: #ff0000 !important;
+  color: #ff0000 !important;
+}
+
+.buttonYoutube:hover {
+  color: #fff !important;
+  background-color: #ff0000 !important;
+  border-color: #ff0000 !important;
+  box-shadow: 0 5px 15px rgba(0,0,0,.05), 0 4px 10px rgba(255,0,0,.25) !important;
+}
+
+
+
+.buttonTwitch {
+  border-color: #6441a4 !important;
+  color: #6441a4 !important;
+}
+
+.buttonTwitch:hover {
+  color: #fff !important;
+  background-color: #6441a4 !important;
+  border-color: #6441a4 !important;
+  box-shadow: 0 5px 15px rgba(0,0,0,.05), 0 4px 10px rgba(100,65,164,.25) !important;
+}
