@@ -21,7 +21,7 @@ export default props => (
 
       <InputGroupAddon type="append">
         <Button
-          className="baseInputSide"
+          className="side"
           onClick={props.handleInput}
         >
           <FontAwesomeIcon icon={props.buttonIcon} />

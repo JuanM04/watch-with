@@ -60,8 +60,7 @@ let Room = props => {
 
       <ReactPlayer
         ref={player}
-        width="500px"
-        height="305px"
+        className="player"
         url={playerURL}
         playing={playerIsPlaying}
         controls

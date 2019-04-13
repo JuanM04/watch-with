@@ -11,7 +11,7 @@ export default props => (
       {props.children}
     </div>
     <footer className="footer text-muted">
-      Made with <FontAwesomeIcon icon="heart" className="footerHeart" /> by <a className="footerLink" href="https://juanm04.com" target="_blank" rel="noopener noreferrer">JuanM04</a>
+      Made with <FontAwesomeIcon icon="heart" className="heart" /> by <a className="link" href="https://juanm04.com" target="_blank" rel="noopener noreferrer">JuanM04</a>
     </footer>
   </>
 )

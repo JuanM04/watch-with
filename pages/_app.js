@@ -3,7 +3,7 @@ import App, { Container } from 'next/app';
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'shards-ui/dist/css/shards.min.css'
-import '../src/styles/main.css'
+import '../src/styles/main.scss'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faCheckCircle, faPlayCircle, faHeart } from '@fortawesome/free-solid-svg-icons'
