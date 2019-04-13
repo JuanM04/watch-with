@@ -23,13 +23,14 @@ export default props => {
       <h2 className="subtitle">Watch media from Youtube, Twitch, Facebook, direct files and more synchronously</h2>
 
       <BaseInput
-        placeholder="Enter room name"
+        placeholder={props.online ? 'Enter room name' : 'You are offline'}
         buttonIcon="check-circle"
         handleInput={handleInput}
         inputValue={inputValue}
         setInputValue={setInputValue}
+        disabled={!props.online}
       >
-        <small className="form-text text-muted">Leave empty to generate one</small>
+        { props.online && <small className="form-text text-muted">Leave empty to generate one</small> }
       </BaseInput>
     </BasePage>
   )

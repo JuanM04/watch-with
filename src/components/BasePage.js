@@ -6,6 +6,8 @@ export default props => (
   <>
     <Head>
       <title>{props.title || 'WatchWith'}</title>
+      <link rel="shortcut icon" type="image/png" href="/static/images/Icon-32.png" />
+      <link rel="manifest" href="/static/manifest.json" />
     </Head>
     <div className={props.player ? 'playerContainer' : 'container'}>
       {props.children}

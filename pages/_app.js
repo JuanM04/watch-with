@@ -27,12 +27,29 @@ class MyApp extends App {
     return { pageProps };
   }
 
+  state = {
+    online: global.navigator ? global.navigator.onLine : true
+  }
+
+  componentDidMount = () => {
+    window.addEventListener('online', this.goOnline)
+    window.addEventListener('offline', this.goOffline)
+  }
+
+  componentWillUnmount = () => {
+    window.removeEventListener('online', this.goOnline)
+    window.removeEventListener('offline', this.goOffline)
+  }
+
+  goOnline = () => this.setState({ online: true })
+  goOffline = () => this.setState({ online: false })
+
   render() {
     const { Component, pageProps } = this.props;
 
     return (
       <Container>
-        <Component {...pageProps} />
+        <Component {...pageProps} online={this.state.online} />
       </Container>
     );
   }

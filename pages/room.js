@@ -69,13 +69,14 @@ let Room = props => {
       />
   
       <BaseInput
-        placeholder="Enter media URL"
+        placeholder={props.online ? 'Enter media URL' : 'You are offline'}
         buttonIcon="play-circle"
         handleInput={handleInput}
         inputValue={inputValue}
         setInputValue={setInputValue}
         isInvalid={isInvalid}
         setIsInvalid={setIsInvalid}
+        disabled={!props.online}
       />
     </BasePage>
   )

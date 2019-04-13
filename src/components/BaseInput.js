@@ -17,12 +17,14 @@ export default props => (
           if(e.keyCode === 13) props.handleInput()
         }}
         invalid={props.isInvalid}
+        disabled={props.disabled}
       ></FormInput>
 
       <InputGroupAddon type="append">
         <Button
           className="side"
           onClick={props.handleInput}
+          disabled={props.disabled}
         >
           <FontAwesomeIcon icon={props.buttonIcon} />
         </Button>
