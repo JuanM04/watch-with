@@ -7,6 +7,7 @@ import {
   InputRightAddon,
   Spinner,
   Text,
+  Button,
 } from "@chakra-ui/core";
 import { Play } from "react-feather";
 
@@ -79,7 +80,7 @@ export default ({ room, isHost }: _Props) => {
       {data.url !== "" ? (
         <ReactPlayer
           ref={playerRef}
-          controls={isHost}
+          controls
           url={data.url}
           playing={!data.isPause}
           onPlay={() => isHost && update({ ...data, isPause: false })}
@@ -105,7 +106,7 @@ export default ({ room, isHost }: _Props) => {
       ) : (
         <Spinner />
       )}
-      <Text>
+      <Text paddingTop="20px">
         <b>Share URL</b>: https://watchwith.juanm04.com/{room}
       </Text>
       <Text>
