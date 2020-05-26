@@ -46,7 +46,7 @@ export default ({ room, isHost }: _Props) => {
 
         const channel = pusher.subscribe(room);
         channel.bind("update", (newData: EventData) => {
-          if (newData.time && data.time !== newData.time) {
+          if (newData.time && playerRef.current && data.time !== newData.time) {
             playerRef.current.seekTo(newData.time);
           }
           setData(newData);
