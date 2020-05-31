@@ -14,45 +14,49 @@ import { Play } from "react-feather";
 type _Props = {
   room: string;
   isHost: boolean;
+  debug: boolean;
 };
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const props: _Props = {
     room: ctx.params.room as string,
     isHost: ctx.query.host === "true",
+    debug: ctx.query.debug === "true",
   };
 
   return { props };
 };
 
-export default ({ room, isHost }: _Props) => {
+export default ({ room, isHost, debug }: _Props) => {
   const [data, setData] = useState<EventData>({
     room,
     url: "",
     isPause: false,
-    time: null,
+    time: 0,
   });
-  const [urlInput, setUrlInput] = useState("");
+  const [urlInput, setUrlInput] = useState(
+    debug ? "https://www.youtube.com/watch?v=WPkMUU9tUqk" : ""
+  );
   const playerRef = useRef<ReactPlayer>(null);
+
+  if (debug) console.info(data, playerRef.current);
 
   useEffect(() => {
     if (typeof window === "undefined" || isHost) return;
 
-    const Pusher = import("pusher-js/with-encryption").then(
-      ({ default: Pusher }) => {
-        const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-          cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
-        });
+    import("pusher-js").then(({ default: Pusher }) => {
+      const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+      });
 
-        const channel = pusher.subscribe(room);
-        channel.bind("update", (newData: EventData) => {
-          if (newData.time && playerRef.current && data.time !== newData.time) {
-            playerRef.current.seekTo(newData.time);
-          }
-          setData(newData);
-        });
-      }
-    );
+      const channel = pusher.subscribe(room);
+      channel.bind("update", (newData: EventData) => {
+        if (playerRef.current && data.time !== newData.time) {
+          playerRef.current.seekTo(newData.time);
+        }
+        setData(newData);
+      });
+    });
   }, []);
 
   function update(data: EventData) {

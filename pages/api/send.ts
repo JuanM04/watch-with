@@ -6,7 +6,6 @@ const pusher = new Pusher({
   cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
   appId: process.env.PUSHER_APP_ID,
   secret: process.env.PUSHER_SECRET,
-  encrypted: true,
 });
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
