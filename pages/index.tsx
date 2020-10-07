@@ -10,14 +10,11 @@ import {
 } from "@chakra-ui/core";
 import { Check } from "react-feather";
 
-export default () => {
+export default function Homepage() {
   const [inputValue, setInputValue] = useState("");
 
   function handleCreate() {
-    Router.push(
-      "/[room]",
-      `/${Math.random().toString(36).substring(7)}?host=true`
-    );
+    Router.push("/[room]", `/${Math.random().toString(36).substring(7)}`);
   }
 
   function handleJoin() {
@@ -55,4 +52,4 @@ export default () => {
       </InputGroup>
     </>
   );
-};
+}

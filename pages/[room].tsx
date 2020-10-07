@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { GetServerSideProps } from "next";
+import { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
+import { useRouter } from "next/router";
 import ReactPlayer from "react-player";
+import { RoomService } from "@roomservice/browser";
+import { MapClient } from "@roomservice/browser/dist/MapClient";
+import { v4 as uuidv4 } from "uuid";
 import {
   Input,
   InputGroup,
@@ -9,113 +12,102 @@ import {
   Text,
   Button,
 } from "@chakra-ui/core";
-import { Play } from "react-feather";
+import { Play as PlayIcon, RefreshCw as SyncIcon } from "react-feather";
 
-type _Props = {
-  room: string;
-  isHost: boolean;
-  debug: boolean;
-};
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const props: _Props = {
-    room: ctx.params.room as string,
-    isHost: ctx.query.host === "true",
-    debug: ctx.query.debug === "true",
-  };
-
-  return { props };
-};
-
-export default ({ room, isHost, debug }: _Props) => {
-  const [data, setData] = useState<EventData>({
-    room,
-    url: "",
-    isPause: false,
-    time: 0,
-  });
-  const [urlInput, setUrlInput] = useState(
-    debug ? "https://www.youtube.com/watch?v=WPkMUU9tUqk" : ""
-  );
-  const playerRef = useRef<ReactPlayer>(null);
-
-  if (debug) console.info(data, playerRef.current);
+function useMap(
+  roomName: string,
+  mapName: string
+): [MapClient | undefined, Dispatch<SetStateAction<MapClient>>] {
+  const [map, setMap] = useState<MapClient>();
 
   useEffect(() => {
-    if (typeof window === "undefined" || isHost) return;
-
-    import("pusher-js").then(({ default: Pusher }) => {
-      const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+    async function load() {
+      const client = new RoomService({
+        auth: "/api/roomservice",
       });
+      const room = await client.room(roomName);
+      const m = await room.map(mapName);
+      setMap(m);
 
-      const channel = pusher.subscribe(room);
-      channel.bind("update", (newData: EventData) => {
-        if (playerRef.current && data.time !== newData.time) {
-          playerRef.current.seekTo(newData.time);
-        }
-        setData(newData);
-      });
-    });
+      room.subscribe(m, (mm) => setMap(mm));
+    }
+    if (typeof window !== "undefined") load();
   }, []);
 
-  function update(data: EventData) {
-    data = playerRef.current
-      ? { ...data, time: playerRef.current.getCurrentTime() }
-      : data;
-    setData(data);
+  return [map, setMap];
+}
 
-    fetch("/api/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-  }
+export default function RoomPage() {
+  const router = useRouter();
+  const roomName = (router.query.room as string) || "debugroom";
+
+  const [data, setData] = useMap(roomName, "playerData");
+  const [lastTimeUpdateId, setLastTimeUpdateId] = useState<
+    string | undefined
+  >();
+
+  const [urlInput, setUrlInput] = useState(
+    data && data.get("url") ? (data.get("url") as string) : ""
+  );
+
+  const playerRef = useRef<ReactPlayer>(null);
 
   function handleInput() {
-    if (ReactPlayer.canPlay(urlInput)) update({ ...data, url: urlInput });
+    if (ReactPlayer.canPlay(urlInput)) setData(data.set("url", urlInput));
     else alert("Invalid URL");
   }
 
-  return (
-    <>
-      {data.url !== "" ? (
-        <ReactPlayer
-          ref={playerRef}
-          controls
-          url={data.url}
-          playing={!data.isPause}
-          onPlay={() => isHost && update({ ...data, isPause: false })}
-          onPause={() => isHost && update({ ...data, isPause: true })}
-          onSeek={(time) => isHost && update({ ...data, time })}
-        />
-      ) : isHost ? (
-        <InputGroup size="md" paddingTop="30px">
+  if (!data) {
+    return <Spinner />;
+  } else {
+    if (lastTimeUpdateId !== data.get("timeUpdateId")) {
+      setLastTimeUpdateId(data.get("timeUpdateId") as string);
+      playerRef.current?.seekTo(data.get("time") as number);
+    }
+
+    return (
+      <>
+        {data.get("url") !== undefined && (
+          <ReactPlayer
+            ref={playerRef}
+            controls
+            url={data.get("url") as string}
+            playing={data.get("playing") === "true"}
+            onPlay={() => setData(data.set("playing", "true"))}
+            onPause={() => setData(data.set("playing", "false"))}
+          />
+        )}
+        <Text paddingTop="20px">
+          <b>Share URL</b>: https://watchwith.juanm04.com/{roomName}
+        </Text>
+        <InputGroup size="md" paddingTop="20px">
           <Input
             placeholder="URL"
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") handleInput();
-            }}
+            onKeyPress={(e) => e.key === "Enter" && handleInput()}
           />
           <InputRightAddon
-            children={<Play />}
+            children={<PlayIcon />}
             onClick={handleInput}
             cursor="pointer"
           />
         </InputGroup>
-      ) : (
-        <Spinner />
-      )}
-      <Text paddingTop="20px">
-        <b>Share URL</b>: https://watchwith.juanm04.com/{room}
-      </Text>
-      <Text>
-        <b>Role</b>: {isHost ? "Host" : "Viewer"}
-      </Text>
-    </>
-  );
-};
+        <Button
+          size="md"
+          marginTop="5px"
+          onClick={() => {
+            if (!playerRef.current) return;
+
+            const id = uuidv4();
+            setLastTimeUpdateId(id);
+            setData(data.set("time", playerRef.current?.getCurrentTime()));
+            setData(data.set("timeUpdateId", id));
+          }}
+        >
+          Sync Time <SyncIcon style={{ marginLeft: "5px" }} size={16} />
+        </Button>
+      </>
+    );
+  }
+}
