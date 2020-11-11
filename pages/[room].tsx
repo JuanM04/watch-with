@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
-import { useRouter } from "next/router";
+import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import ReactPlayer from "react-player";
-import { RoomService } from "@roomservice/browser";
-import { MapClient } from "@roomservice/browser/dist/MapClient";
+import { RoomService, MapClient } from "@roomservice/browser";
 import { v4 as uuidv4 } from "uuid";
 import {
   Input,
@@ -14,11 +13,13 @@ import {
 } from "@chakra-ui/core";
 import { Play as PlayIcon, RefreshCw as SyncIcon } from "react-feather";
 
+type Map = MapClient<string>;
+
 function useMap(
   roomName: string,
   mapName: string
-): [MapClient | undefined, Dispatch<SetStateAction<MapClient>>] {
-  const [map, setMap] = useState<MapClient>();
+): [Map | undefined, Dispatch<SetStateAction<Map>>] {
+  const [map, setMap] = useState<Map>();
 
   useEffect(() => {
     async function load() {
@@ -26,7 +27,7 @@ function useMap(
         auth: "/api/roomservice",
       });
       const room = await client.room(roomName);
-      const m = await room.map(mapName);
+      const m = room.map<string>(mapName);
       setMap(m);
 
       room.subscribe(m, (mm) => setMap(mm));
@@ -37,17 +38,32 @@ function useMap(
   return [map, setMap];
 }
 
-export default function RoomPage() {
-  const router = useRouter();
-  const roomName = (router.query.room as string) || "debugroom";
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const room = ctx.params?.room;
 
+  if (typeof room !== "string") {
+    return {
+      notFound: true,
+    };
+  }
+
+  return {
+    props: {
+      roomName: room,
+    },
+  };
+};
+
+export default function RoomPage({
+  roomName,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [data, setData] = useMap(roomName, "playerData");
   const [lastTimeUpdateId, setLastTimeUpdateId] = useState<
     string | undefined
   >();
 
   const [urlInput, setUrlInput] = useState(
-    data && data.get("url") ? (data.get("url") as string) : ""
+    data && data.get("url") ? data.get("url") : ""
   );
 
   const playerRef = useRef<ReactPlayer>(null);
@@ -61,8 +77,8 @@ export default function RoomPage() {
     return <Spinner />;
   } else {
     if (lastTimeUpdateId !== data.get("timeUpdateId")) {
-      setLastTimeUpdateId(data.get("timeUpdateId") as string);
-      playerRef.current?.seekTo(data.get("time") as number);
+      setLastTimeUpdateId(data.get("timeUpdateId"));
+      playerRef.current?.seekTo(parseFloat(data.get("time")));
     }
 
     return (
@@ -71,10 +87,16 @@ export default function RoomPage() {
           <ReactPlayer
             ref={playerRef}
             controls
-            url={data.get("url") as string}
+            url={data.get("url")}
             playing={data.get("playing") === "true"}
-            onPlay={() => setData(data.set("playing", "true"))}
-            onPause={() => setData(data.set("playing", "false"))}
+            onPlay={() => {
+              if (data.get("playing") === "false")
+                setData(data.set("playing", "true"));
+            }}
+            onPause={() => {
+              if (data.get("playing") === "true")
+                setData(data.set("playing", "false"));
+            }}
           />
         )}
         <Text paddingTop="20px">
@@ -101,7 +123,9 @@ export default function RoomPage() {
 
             const id = uuidv4();
             setLastTimeUpdateId(id);
-            setData(data.set("time", playerRef.current?.getCurrentTime()));
+            setData(
+              data.set("time", playerRef.current?.getCurrentTime().toString())
+            );
             setData(data.set("timeUpdateId", id));
           }}
         >
