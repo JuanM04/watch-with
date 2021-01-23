@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Router from "next/router";
+import { customAlphabet } from "nanoid";
 import slugify from "slugify";
 import {
   Button,
@@ -10,11 +11,13 @@ import {
 } from "@chakra-ui/core";
 import { Check } from "react-feather";
 
+const randomRoom = customAlphabet("abcdefghijklmnopqrstuvwxyz", 8);
+
 export default function Homepage() {
   const [inputValue, setInputValue] = useState("");
 
   function handleCreate() {
-    Router.push("/[room]", `/${Math.random().toString(36).substring(7)}`);
+    Router.push("/[room]", "/" + randomRoom());
   }
 
   function handleJoin() {

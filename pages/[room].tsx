@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, useRef } from "react";
 import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import ReactPlayer from "react-player";
-import { RoomService, MapClient } from "@roomservice/browser";
-import { v4 as uuidv4 } from "uuid";
+import { useMap, usePresence } from "@roomservice/react";
+import { nanoid } from "nanoid";
 import {
   Input,
   InputGroup,
@@ -13,32 +13,16 @@ import {
 } from "@chakra-ui/core";
 import { Play as PlayIcon, RefreshCw as SyncIcon } from "react-feather";
 
-type Map = MapClient<string>;
+type PlayerData = {
+  url: string | null;
+  time: number;
+  timeUpdateId: string;
+  playing: boolean;
+};
 
-function useMap(
-  roomName: string,
-  mapName: string
-): [Map | undefined, Dispatch<SetStateAction<Map>>] {
-  const [map, setMap] = useState<Map>();
-
-  useEffect(() => {
-    async function load() {
-      const client = new RoomService({
-        auth: "/api/roomservice",
-      });
-      const room = await client.room(roomName);
-      const m = room.map<string>(mapName);
-      setMap(m);
-
-      room.subscribe(m, (mm) => setMap(mm));
-    }
-    if (typeof window !== "undefined") load();
-  }, []);
-
-  return [map, setMap];
-}
-
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
+export const getServerSideProps: GetServerSideProps<{
+  roomName: string;
+}> = async (ctx) => {
   const room = ctx.params?.room;
 
   if (typeof room !== "string") {
@@ -57,50 +41,63 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 export default function RoomPage({
   roomName,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const [data, setData] = useMap(roomName, "playerData");
+  const [playerData, playerMap] = useMap<PlayerData>(roomName, "playerData");
+  const [watching, presence] = usePresence<boolean>(roomName, "watching");
   const [lastTimeUpdateId, setLastTimeUpdateId] = useState<
     string | undefined
   >();
 
-  const [urlInput, setUrlInput] = useState(
-    data && data.get("url") ? data.get("url") : ""
-  );
+  useEffect(() => {
+    console.log(roomName);
+    presence.set(true);
+  }, []);
+
+  const [urlInput, setUrlInput] = useState(playerData?.url || "");
 
   const playerRef = useRef<ReactPlayer>(null);
 
   function handleInput() {
-    if (ReactPlayer.canPlay(urlInput)) setData(data.set("url", urlInput));
-    else alert("Invalid URL");
+    if (ReactPlayer.canPlay(urlInput) && playerMap) {
+      playerMap.set("url", urlInput);
+    } else {
+      alert("Invalid URL");
+    }
   }
 
-  if (!data) {
+  if (!playerData || !playerMap) {
     return <Spinner />;
   } else {
-    if (lastTimeUpdateId !== data.get("timeUpdateId")) {
-      setLastTimeUpdateId(data.get("timeUpdateId"));
-      playerRef.current?.seekTo(parseFloat(data.get("time")));
+    if (playerMap.keys.length === 0) {
+      playerMap.set("url", null);
+      playerMap.set("time", 0);
+      playerMap.set("timeUpdateId", "");
+      playerMap.set("playing", false);
+    }
+
+    if (lastTimeUpdateId !== playerData.timeUpdateId) {
+      setLastTimeUpdateId(playerData.timeUpdateId);
+      playerRef.current?.seekTo(playerData.time);
     }
 
     return (
       <>
-        {data.get("url") !== undefined && (
+        {playerData.url !== null && (
           <ReactPlayer
             ref={playerRef}
             controls
-            url={data.get("url")}
-            playing={data.get("playing") === "true"}
-            onPlay={() => {
-              if (data.get("playing") === "false")
-                setData(data.set("playing", "true"));
-            }}
-            onPause={() => {
-              if (data.get("playing") === "true")
-                setData(data.set("playing", "false"));
-            }}
+            url={playerData.url}
+            playing={playerData.playing}
+            onPlay={() => !playerData.playing && playerMap.set("playing", true)}
+            onPause={() =>
+              playerData.playing && playerMap.set("playing", false)
+            }
           />
         )}
         <Text paddingTop="20px">
           <b>Share URL</b>: https://watchwith.juanm04.com/{roomName}
+        </Text>
+        <Text>
+          <b>Watching</b>: {Object.values(watching).filter(Boolean).length}
         </Text>
         <InputGroup size="md" paddingTop="20px">
           <Input
@@ -121,12 +118,10 @@ export default function RoomPage({
           onClick={() => {
             if (!playerRef.current) return;
 
-            const id = uuidv4();
+            const id = nanoid();
             setLastTimeUpdateId(id);
-            setData(
-              data.set("time", playerRef.current?.getCurrentTime().toString())
-            );
-            setData(data.set("timeUpdateId", id));
+            playerMap.set("time", playerRef.current?.getCurrentTime());
+            playerMap.set("timeUpdateId", id);
           }}
         >
           Sync Time <SyncIcon style={{ marginLeft: "5px" }} size={16} />

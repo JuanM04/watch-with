@@ -1,9 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { v4 as uuidv4 } from "uuid";
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const body = req.body;
-  const user = "user-" + uuidv4();
+  const user = req.body.user;
+
+  const resources = [
+    {
+      object: "room",
+      room: body.room,
+      permission: "join",
+    },
+  ];
 
   const r = await fetch("https://super.roomservice.dev/provision", {
     method: "post",
@@ -12,8 +19,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      user: user,
-      resources: body.resources,
+      user,
+      resources,
     }),
   });
 
