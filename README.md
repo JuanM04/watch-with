@@ -1,13 +1,11 @@
 # WatchWith
 
-Powered by [Room Service](https://roomservice.dev) and hosted in [Vercel](https://vercel.com).
+[Live app](https://watchwith.juanm04.com), hosted in [Railway](https://railway.app).
 
 ## Usage
 
-1. Create a Room Service project
-2. Put your credentials in a .env, following the .env.example
-3. Run
 ```bash
 $ yarn install
-$ vercel dev
+$ yarn build
+$ yarn start
 ```
