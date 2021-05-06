@@ -1,0 +1,14 @@
+{
+  "name": "WatchWith: Watch videos with friends",
+  "short_name": "WatchWith",
+  "description": "Watch media from Youtube, Twitch, Facebook, direct files and more synchronously",
+  "icons": [
+    { "src": "/favicon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/favicon-512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "start_url": "/",
+  "background_color": "#111827",
+  "display": "fullscreen",
+  "scope": "/",
+  "theme_color": "#111827"
+}
