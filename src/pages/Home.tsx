@@ -2,7 +2,7 @@ import React from "react";
 import { customAlphabet } from "nanoid";
 import { ArgentinaIcon, HeartIcon, NextIcon } from "@components/icons";
 import { Input } from "@components/Input";
-import { ROOM_REGEX, ROOM_INPUT_REGEX } from "@utils/room-name";
+import { ROOM_REGEX, ROOM_INPUT_REGEX } from "@shared/room";
 
 const roomGenerator = customAlphabet("0123456789", 5);
 

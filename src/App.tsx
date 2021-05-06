@@ -1,8 +1,8 @@
 import React from "react";
-import { ROOM_REGEX } from "@utils/room-name";
+import { ROOM_REGEX } from "@shared/room";
+import { socket, SocketContext } from "@utils/socket";
 import Home from "./pages/Home";
 import Room from "./pages/Room";
-import RoomWrapper from "./pages/Room/wrapper";
 
 export default function App() {
   const path = location.pathname.substr(1); // removes first `/`
@@ -17,14 +17,10 @@ export default function App() {
   }
 
   return (
-    <div className="bg-gradient-to-t from-gray-900 via-gray-800 to-gray-900 h-screen">
-      {inHome ? (
-        <Home />
-      ) : (
-        <RoomWrapper>
-          <Room />
-        </RoomWrapper>
-      )}
-    </div>
+    <SocketContext.Provider value={socket}>
+      <div className="bg-gradient-to-t from-gray-900 via-gray-800 to-gray-900 h-screen">
+        {inHome ? <Home /> : <Room />}
+      </div>
+    </SocketContext.Provider>
   );
 }
